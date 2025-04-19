@@ -6,8 +6,12 @@ export interface UserWeapon {
     weapon: string;
     winProbability: number;
 }
+
+const postfixChance = 0.1;
+
 let users: string[] = [];
 let weapons: string[] = [];
+let weaponPostfixes: string[] = [];
 let weaponCategories: Record<string, string> = {};
 let systemPrompt: string = "";
 
@@ -60,6 +64,7 @@ async function loadWeapons() {
 export async function initTestData() {
     users = await loadFile("data/users.txt");
     systemPrompt = await readFile("data/prompt.txt", "utf8");
+    weaponPostfixes = await loadFile("data/weapon_postfixes.txt");
     await loadWeapons();
 }
 
@@ -71,10 +76,25 @@ export function getWeaponCategory(weapon: string) {
     return weaponCategories[weapon];
 }
 
+export function getWeaponPostfix(weapon: string): [string | null, string] {
+    const postfix = weaponPostfixes.find(postfix => weapon.endsWith(postfix));
+    if (postfix) {
+        return [postfix, weapon.slice(0, -postfix.length)];
+    }
+    return [null, weapon];
+}
+
 // Function to generate random user-weapon-weight tuples
 export function generateTestData(n: number): UserWeapon[] {
     const chosenUsers = shuffle(users).slice(0, n);
     const chosenWeapons = shuffle(weapons).slice(0, n);
+
+    const finalChosenWeapons = chosenWeapons.map(weapon => {
+        if (Math.random() < postfixChance) {
+            return weapon + weaponPostfixes[Math.floor(Math.random() * weaponPostfixes.length)];
+        }
+        return weapon;
+    });
 
     let totalWeight = 0;
     const weights = new Array(n).fill(0).map(() => {
@@ -86,7 +106,7 @@ export function generateTestData(n: number): UserWeapon[] {
     // Generate n random pairs
     return chosenUsers.map((user, i) => ({
         combatant: user,
-        weapon: chosenWeapons[i],
+        weapon: finalChosenWeapons[i],
         winProbability: weights[i],
     }));
 }

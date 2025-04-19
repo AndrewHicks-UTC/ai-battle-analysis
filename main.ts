@@ -22,7 +22,7 @@ async function main(): Promise<void> {
         for (let i = startIndex; i < endIndex; i++) {
             promises.push(
                 simulateBattle(
-                    generateTestData(Math.floor(6 + Math.random() * 4)),
+                    generateTestData(5),
                     i,
                     getSystemPrompt(),
                     logger,

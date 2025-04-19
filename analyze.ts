@@ -1,4 +1,4 @@
-import { getData, getWeaponCategory, UserWeapon } from "./test-data";
+import { getData, getWeaponCategory, getWeaponPostfix, initTestData, UserWeapon } from "./test-data";
 import { writeFile } from "fs/promises";
 
 interface BattleResult {
@@ -24,25 +24,22 @@ async function logWinrates(data: BattleResult[]) {
     const winRecords: Record<string, WinRecord> = {};
     data.forEach(result => {
         result.testData.forEach(user => {
-            if (user.combatant === result.winner) {
-                winRecords[user.weapon] = {
-                    wins: (winRecords[user.weapon]?.wins || 0) + 1,
-                    losses: (winRecords[user.weapon]?.losses || 0),
-                };
-                const category = getWeaponCategory(user.weapon);
-                winRecords[category] = {
-                    wins: (winRecords[category]?.wins || 0) + 1,
-                    losses: (winRecords[category]?.losses || 0),
-                };
-            } else {
-                winRecords[user.weapon] = {
-                    wins: (winRecords[user.weapon]?.wins || 0),
-                    losses: (winRecords[user.weapon]?.losses || 0) + 1,
-                };
-                const category = getWeaponCategory(user.weapon);
-                winRecords[category] = {
-                    wins: (winRecords[category]?.wins || 0),
-                    losses: (winRecords[category]?.losses || 0) + 1,
+            const won = user.combatant === result.winner;
+            const [postfix, weapon] = getWeaponPostfix(user.weapon);
+            const category = getWeaponCategory(weapon);
+
+            winRecords[weapon] = {
+                wins: (winRecords[weapon]?.wins || 0) + (won ? 1 : 0),
+                losses: (winRecords[weapon]?.losses || 0) + (won ? 0 : 1),
+            };
+            winRecords[category] = {
+                wins: (winRecords[category]?.wins || 0) + (won ? 1 : 0),
+                losses: (winRecords[category]?.losses || 0) + (won ? 0 : 1),
+            };
+            if (postfix) {
+                winRecords[postfix] = {
+                    wins: (winRecords[postfix]?.wins || 0) + (won ? 1 : 0),
+                    losses: (winRecords[postfix]?.losses || 0) + (won ? 0 : 1),
                 };
             }
         });
@@ -86,6 +83,11 @@ async function exportData(data: BattleResult[]) {
     await writeFile(`outputs/exported-data.csv`, "weapon,winProbability,won\n" + dataPoints.map(point => `${escapeCsv(point.weapon)},${point.winProbability},${point.won}`).join("\n"));
 }
 
-const data = await getData("250419") as BattleResult[];
-logWinrates(data);
-exportData(data);
+async function main() {
+    const data = await getData("250419") as BattleResult[];
+    await initTestData();
+    logWinrates(data);
+    exportData(data);
+}
+
+main();
