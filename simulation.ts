@@ -14,7 +14,7 @@ interface BattleResult {
 export async function simulateBattle(testData: UserWeapon[], id: number, systemPrompt: string, logger: Logger): Promise<void> {
     const schema = z.object({
         battle_description: z.string(),
-        winner: z.string(),
+        winner: z.enum(testData.map(user => user.combatant) as [string, ...string[]]),
     });
 
     const completion = await openai.chat.completions.create({

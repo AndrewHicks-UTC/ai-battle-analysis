@@ -7,7 +7,7 @@ async function main(): Promise<void> {
     await initTestData();
 
     const logger = new Logger();
-    const totalSimulations = 2000;
+    const totalSimulations = 3000;
     const batchSize = 200;
     const batches = Math.ceil(totalSimulations / batchSize);
 
