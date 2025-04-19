@@ -1,0 +1,1 @@
+You will be given a JSON array representing a list of combatants, their weapons, and their probabilities of winning. You will make these combatants fight in a chaotic battle to the death until only one is left standing.
