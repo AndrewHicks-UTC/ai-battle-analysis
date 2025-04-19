@@ -20,37 +20,6 @@ interface DataPoint extends UserWeapon {
     won: boolean;
 }
 
-async function logWinrates() {
-    const data = await getData("250305") as BattleResult[];
-
-    const winRecords: Record<string, WinRecord> = {};
-    data.forEach(result => {
-        result.testData.forEach(user => {
-            if (user.combatant === result.winner) {
-                winRecords[user.weapon] = {
-                    wins: (winRecords[user.weapon]?.wins || 0) + 1,
-                    losses: (winRecords[user.weapon]?.losses || 0),
-                };
-            } else {
-                winRecords[user.weapon] = {
-                    wins: (winRecords[user.weapon]?.wins || 0),
-                    losses: (winRecords[user.weapon]?.losses || 0) + 1,
-                };
-            }
-        });
-    });
-    const winrates = Object.entries(winRecords).map(([weapon, winRecord]): [string, Winrate] => {
-        return [
-            weapon,
-            {
-                ...winRecord,
-                winrate: winRecord.wins / (winRecord.wins + winRecord.losses),
-            },
-        ];
-    }).sort((a, b) => b[1].winrate - a[1].winrate);
-    console.log(winrates);
-}
-
 function escapeCsv(value: string) {
     if (value.match(/[",\n]/)) {
         return `"${value.replace(/"/g, '""')}"`;

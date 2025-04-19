@@ -8,7 +8,7 @@ export interface UserWeapon {
 }
 let users: string[] = [];
 let weapons: string[] = [];
-let tracks: string[] = [];
+let weaponCategories: Record<string, string> = {};
 let systemPrompt: string = "";
 
 function shuffle<T>(array: T[]) {
@@ -46,19 +46,29 @@ export async function getData(day: string) {
     return dataLines.map(line => JSON.parse(line));
 }
 
-export async function initTestData() {
-    users = await loadFile("data/users.txt");
-    weapons = await loadFile("data/weapons.txt");
-    tracks = await loadFile("data/tracks.txt");
-    systemPrompt = await readFile("data/prompt.txt", "utf8");
+async function loadWeapons() {
+    const categories = ["objects", "weapons", "special"];
+    for (const category of categories) {
+        const theseWeapons = await loadFile(`data/weapons/${category}.txt`);
+        for (const weapon of theseWeapons) {
+            weaponCategories[weapon] = category;
+        }
+        weapons.push(...theseWeapons);
+    }
 }
 
-function getTrack() {
-    return tracks[Math.floor(Math.random() * tracks.length)];
+export async function initTestData() {
+    users = await loadFile("data/users.txt");
+    systemPrompt = await readFile("data/prompt.txt", "utf8");
+    await loadWeapons();
 }
 
 export function getSystemPrompt() {
-    return systemPrompt.replace("TRACK_NAME", getTrack());
+    return systemPrompt;
+}
+
+export function getWeaponCategory(weapon: string) {
+    return weaponCategories[weapon];
 }
 
 // Function to generate random user-weapon-weight tuples
