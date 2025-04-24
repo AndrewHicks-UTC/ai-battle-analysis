@@ -53,7 +53,34 @@ async function logWinrates(data: BattleResult[]) {
             },
         ];
     }).sort((a, b) => b[1].winrate - a[1].winrate);
+
+    let chi2 = 0;
+    Object.values(winRecords).forEach(winRecord => {
+        const expectedWins = (winRecord.wins + winRecord.losses) * 0.2;
+        chi2 += (winRecord.wins - expectedWins) ** 2 / expectedWins;
+    });
+    console.log(chi2);
+
     await writeFile("outputs/winrates.csv", "weapon,winrate\n" + winrates.map(winrate => `${escapeCsv(winrate[0])},${winrate[1].winrate}`).join("\n"));
+}
+
+async function logUserWinrates(data: BattleResult[]) {
+    const winRecords: Record<string, WinRecord> = {};
+    let chi2 = 0;
+    data.forEach(result => {
+        result.testData.forEach(user => {
+            const won = user.combatant === result.winner;
+            winRecords[user.combatant] = {
+                wins: (winRecords[user.combatant]?.wins || 0) + (won ? 1 : 0),
+                losses: (winRecords[user.combatant]?.losses || 0) + (won ? 0 : 1),
+            };
+        });
+    });
+    Object.values(winRecords).forEach(winRecord => {
+        const expectedWins = (winRecord.wins + winRecord.losses) * 0.2;
+        chi2 += (winRecord.wins - expectedWins) ** 2 / expectedWins;
+    });
+    console.log(chi2);
 }
 
 function escapeCsv(value: string) {
@@ -87,6 +114,7 @@ async function main() {
     const data = await getData("250419") as BattleResult[];
     await initTestData();
     logWinrates(data);
+    logUserWinrates(data);
     exportData(data);
 }
 
